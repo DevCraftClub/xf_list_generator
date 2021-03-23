@@ -3,7 +3,7 @@
 	<name>Xfield List Generator</name>
 	<description>Создаёт списки доп. полей на основе шаблона.</description>
 	<icon></icon>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<dleversion>13</dleversion>
 	<versioncompare>greater</versioncompare>
 	<upgradeurl></upgradeurl>
@@ -45,7 +45,7 @@ $where = ["p.xfields LIKE '%{$xffield}|%'"];
 
 $limit = (isset($limit) && (int)$limit && (int) $limit !== 0) ? (int)$limit : '18446744073709551615';
 $skip = (isset($skip) && (int)$skip && (int) $skip !== 0) ? (int)($skip+1) : 1;
-$cprefix = "xf_gen_".$xffield;
+$cprefix = "news_xf_gen_".$xffield;
 $db_prefix = PREFIX;
 $sort = (isset($sort) && in_array($sort, ['asc', 'desc', 'ASC', 'DESC'])) ? $sort : 'ASC';
 
@@ -133,11 +133,11 @@ if (!function_exists('gen_xfields')) {
 					'value' => $buf_split[1],
 					'type' => $buf_split[3],
 					'splitter' => empty($buf_split[21]) ? ', ' : $buf_split[21],
-					'search' => (1 === $buf_split[6]) ? true : false,
+					'search' => ($buf_split[6] == 1) ? true : false,
 					'default' => [],
 				];
 
-				if ('select' == $buf_split[3]) {
+				if ('select' === $buf_split[3]) {
 					$default_values = explode('__NEWL__', $buf_split[4]);
 					foreach ($default_values as $val) {
 						$vals = explode('&#124;', $val);
@@ -173,8 +173,8 @@ if( $gen ) {
 	while($gen = $db->get_row()) {
 		$l++;
 		$xf = $gen['x'];
-			if (!in_array($xf, $all_xfs)) {
-				if ('select' == $xf_chosen['type']) {
+			if (!in_array($xf, $all_xfs, true)) {
+				if ('select' === $xf_chosen['type']) {
 					$value = $xffields[$xffield]['default'][$xf];
 				} else {
 					$value = $xf;
@@ -196,10 +196,13 @@ if( $gen ) {
 					$min_max_value[] = (int) $xf;
 				}
 
+//				$count = $db->super_query( "SELECT count(*) as total from {$dbprefix}_post WHERE xfields LIKE '%{$xffield}|{$xf}%'");
+
 				$gen_tpl->set('{link}', $link);
 				$gen_tpl->set('{name}', $value);
 				$gen_tpl->set('{value}', $xf);
-				$gen_tpl->set('{count}', ((int) $gen['total']/6));
+//				$gen_tpl->set('{count}', (int) $count['total']);
+				$gen_tpl->set('{count}', (int) ceil(((int) $gen['total']/6)));
 
 				$all_xfs[] = $xf;
 			} else {
